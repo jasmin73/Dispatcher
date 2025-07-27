@@ -1,0 +1,84 @@
+﻿ @page "/product"
+ @inject IProductRepository _productRepository
+ 
+
+ <div class="row pt-3">
+    <div class="col-6 pb-2">
+        <h3 class="card-title text-primary text-center">Lista proizvoda</h3>
+    </div>
+    <div class="col-4 offset-2 pb-2">
+        <a class="btn btn-success" href="product/create"><i class="bi bi-plus-square"></i> Kreiraj novi proizvod</a>
+    </div>
+    <div class="col-10 pt-3">
+        @if (Products.Any())
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>Opis</th>
+                        <th>Cena</th>
+                        <th>Kategorija</th>
+                        <th>Datum kreiranja</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var objProd in Products)
+                    {
+                        <tr>
+                            <td>@objProd.Name</td>
+                            <td>@HtmlHelper.StripHtml(objProd.Description)</td>
+                            <td>@objProd.Price</td>
+                            <td>@objProd.Category.Name</td>
+                            <td>@objProd.AddedDate</td>
+                            <td>
+                                <NavLink href="@($"product/edit/{objProd.Id}")" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Izmeni</NavLink>
+                                <NavLink href="@($"product/delete/{objProd.Id}")" class="btn btn-danger"><i class="bi bi-trash"></i> Obrisi</NavLink>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+                <div class="text-center">
+                    <img src="images/200w.webp" />
+
+                </div>
+            }
+            else
+            {
+                <h4 class="card-title text-secondary">Nema nista za prikaz...</h4>
+            }
+
+        }
+    </div>
+ </div>
+
+@code{
+    private IEnumerable<ProductDTO> Products{ get; set; }=new List<ProductDTO>();
+    
+    private bool IsLoading{ get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+           await LoadProducts();
+        }
+    }
+    private async Task LoadProducts()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        Products = await _productRepository.GetAll();
+        IsLoading=false;
+        StateHasChanged();
+    }
+ }
+

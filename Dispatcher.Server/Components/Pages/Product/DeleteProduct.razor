@@ -1,0 +1,75 @@
+﻿@page "/product/delete/{Id:int}"
+@inject IProductRepository _productRepository
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+
+<div class="row pt-2">
+    <h3 class="card-title text-primary text-center pb-3">Brisanje Proizvoda</h3>
+    <div class="col-2">
+    </div>
+    <div class="col-8">
+        @if (IsLoading)
+        {
+            <div class="text-center">
+                <img src="images/200w.webp" />
+            </div>
+        }
+        else
+        {
+            <EditForm Model="Product" OnValidSubmit="DeleteProduct1">
+                <DataAnnotationsValidator />
+                <div class="form-group pb-2">
+                    <label>Naziv</label>
+                    <InputText @bind-Value="Product.Name" class="form-control" disabled></InputText>
+                    <ValidationMessage For="() => Product.Name"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Opis</label>
+                    <InputText Value="HtmlHelper.StripHtml(Product.Description)" class="form-control" disabled></InputText>
+                    <ValidationMessage For="() => Product.Description"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Opis</label>
+                    <InputNumber @bind-Value="Product.Price" class="form-control" disabled></InputNumber>
+                    <ValidationMessage For="() => Product.Price"></ValidationMessage>
+                </div>
+                <div class="form-group py-2">
+                    <button class="btn btn-primary"><i class="bi bi-trash"></i> Obrisi</button>
+                    <NavLink href="category" class="btn btn-success"><i class="bi bi-arrow-right-circle"></i> Nazad na listu</NavLink>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public int Id{ get; set; }
+    private ProductDTO Product { get; set; } = new ProductDTO();
+    private bool IsLoading{ get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadProduct();
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        Product = await _productRepository.Get(Id);
+        IsLoading = false;
+        StateHasChanged();
+    }
+    private async Task DeleteProduct1()
+    {
+        await _productRepository.Delete(Id);
+        await _jsRuntime.ToastrSuccess("Uspesno obrisan proizvod");
+        _navigationManager.NavigateTo("product");
+    }
+}

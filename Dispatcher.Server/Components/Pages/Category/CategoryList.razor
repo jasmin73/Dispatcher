@@ -1,0 +1,78 @@
+﻿@page "/category"
+@inject ICategoryRepository _categoryRepository
+
+
+<div class="row pt-3">
+    <div class="col-6 pb-2">
+        <h3 class="card-title text-primary text-center">Lista kategorija</h3>
+    </div>
+    <div class="col-4 offset-2 pb-2">
+        <a class="btn btn-success" href="category/create"><i class="bi bi-plus-square"></i> Kreiraj novu kategoriju</a>
+    </div>
+    
+    <div class="col-10 pt-3">
+        @if (Categories.Any())
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>Opis</th>
+                        <th>Datum kreiranja</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var objCat in Categories)
+                    {
+                        <tr>
+                            <td>@objCat.Name</td>
+                            <td>@HtmlHelper.StripHtml(objCat.Description)</td>
+                            <td>@objCat.Added_Date</td>
+                            <td>
+                                <NavLink href="@($"category/edit/{objCat.Id}")" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Izmeni</NavLink>
+                                <NavLink href="@($"category/delete/{objCat.Id}")" class="btn btn-danger"><i class="bi bi-trash"></i> Obrisi</NavLink>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+                <div class="text-center">
+                    <img src="images/200w.webp" />
+
+                </div>
+            }
+            else
+            {
+                <h4 class="card-title text-secondary">Nema nista za prikaz...</h4>
+            }
+
+        }
+    </div>
+</div>
+
+@code {
+    private IEnumerable<CategoryDTO> Categories { get; set; } = new List<CategoryDTO>();
+    private bool IsLoading { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            LoadCategories();
+        }
+    }
+    private async Task LoadCategories()
+    {
+        IsLoading=true;
+        StateHasChanged();
+        Categories =await _categoryRepository.GetAll();
+        IsLoading=false;
+        StateHasChanged();
+    }
+}

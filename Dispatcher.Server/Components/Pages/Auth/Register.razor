@@ -1,0 +1,78 @@
+﻿@page "/register"
+@using Dispatcher.DataAccess
+@using Microsoft.AspNetCore.Identity
+@using Dispatcher.DataAccess
+@using System.ComponentModel.DataAnnotations
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+
+<h3>Registracija novog korisnika</h3>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+
+<EditForm Model="Input" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-2">
+        <label>Ime i prezime</label>
+        <InputText @bind-Value="Input.FullName" class="form-control" />
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Email</label>
+        <InputText @bind-Value="Input.Email" class="form-control" />
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Lozinka</label>
+        <InputText @bind-Value="Input.Password" type="password" class="form-control" />
+    </div>
+
+    <button class="btn btn-success">Registruj</button>
+</EditForm>
+
+@code {
+    private RegisterModel Input = new();
+    private string ErrorMessage;
+
+    public class RegisterModel
+    {
+        [Required]
+        public string FullName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; }
+    }
+
+    private async Task RegisterUser()
+    {
+        var newUser = new ApplicationUser
+        {
+            UserName = Input.Email,
+            Email = Input.Email,
+            FullName = Input.FullName,
+            TenantId = 1 // Kasnije postavi dinamički na osnovu prijavljenog korisnika
+        };
+
+        var result = await UserManager.CreateAsync(newUser, Input.Password);
+
+        if (result.Succeeded)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            ErrorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
+        }
+    }
+}
+

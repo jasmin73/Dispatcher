@@ -1,0 +1,108 @@
+﻿@page "/product/edit/{Id:int}"
+@page "/product/create"
+@inject IProductRepository _productRepository
+@inject ICategoryRepository _categoryRepository
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+
+<div class="row pt-2">
+    <h3 class="card-title text-primary text-center pb-3">@Title Proizvod</h3>
+    <div class="col-2">
+    </div>
+    <div class="col-8">
+        @if (IsLoading)
+        {
+            <div class="text-center">
+                <img src="images/200w.webp" />
+            </div>
+        }
+        else
+        {
+            <EditForm Model="Product" OnValidSubmit="UpsertProduct">
+                <DataAnnotationsValidator />
+                <div class="form-group pb-2">
+                    <label>Naziv</label>
+                    <InputText @bind-Value="Product.Name" class="form-control"></InputText>
+                    <ValidationMessage For="() => Product.Name"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Opis</label>
+                    <SfRichTextEditor @bind-Value="Product.Description" class="form-control"></SfRichTextEditor>
+                    <ValidationMessage For="() => Product.Description"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Cena</label>
+                    <InputNumber @bind-Value="Product.Price" class="form-control"></InputNumber>
+                    <ValidationMessage For="() => Product.Price"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Kategorija</label>
+                    <InputSelect @bind-Value="Product.CategoryId" class="form-select">
+                        <option value="0" disabled selected>-- Odaberite kategoriju --</option>
+                        @foreach(var cat in CategoryList)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+
+                    </InputSelect>
+                </div>
+                <div class="form-group py-2">
+                    <button class="btn btn-primary"><i class="bi bi-pencil-square"></i> @Title</button>
+                    <NavLink href="product" class="btn btn-success"><i class="bi bi-arrow-right-circle"></i> Nazad na listu</NavLink>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id{ get; set; }
+
+    private ProductDTO Product { get; set; } = new ProductDTO();
+    private IEnumerable<CategoryDTO> CategoryList { get; set; } = new List<CategoryDTO>();
+    private string Title { get; set; } = "Kreiraj";
+    private bool IsLoading{ get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadProduct();
+
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        CategoryList =await  _categoryRepository.GetAll();
+        if (Id != 0)
+        {
+            //update
+            Title = "Izmeni";
+            Product = await _productRepository.Get(Id);
+        }
+
+        IsLoading=false;
+        StateHasChanged();
+    }
+    private async Task UpsertProduct()
+    {
+        if (Id == 0)
+        {
+            await _productRepository.Create(Product);
+            await _jsRuntime.ToastrSuccess("Uspesno kreiran proizvod");
+        }
+        else
+        {
+            await _productRepository.Update(Product);
+            await _jsRuntime.ToastrSuccess("Uspesno izmenjen proizvod");
+
+        }
+        _navigationManager.NavigateTo("product");
+    }
+}

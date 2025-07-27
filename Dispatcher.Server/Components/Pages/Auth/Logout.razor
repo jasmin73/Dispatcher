@@ -1,0 +1,16 @@
+﻿@page "/logout"
+@using Dispatcher.DataAccess
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<h4>Odjava u toku...</h4>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}
+

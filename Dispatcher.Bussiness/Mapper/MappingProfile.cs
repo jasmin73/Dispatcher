@@ -14,6 +14,9 @@ namespace Dispatcher.Bussiness.Mapper
         public MappingProfile()
         {
             CreateMap<Category, CategoryDTO>().ReverseMap();
+            CreateMap<Product,ProductDTO>().ReverseMap();
+            CreateMap<Customer,CustomerDTO>().ReverseMap();
+            CreateMap<CustomerAddress,CustomerAddressDTO>().ReverseMap();
         }
     }
 }

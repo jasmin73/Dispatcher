@@ -1,0 +1,92 @@
+﻿@page "/category/edit/{Id:int}"
+@page "/category/create"
+@inject ICategoryRepository _categoryRepository
+@inject NavigationManager _navManager
+@inject IJSRuntime _jsRuntime
+
+
+<div class="row pt-2">
+    <h3 class="card-title text-primary text-center pb-3">@Title Kategoriju</h3>
+    <div class="col-2">
+
+    </div>
+    <div class="col-8">
+        @if (IsLoading)
+        {
+            <div class="text-center">
+                <img src="images/200w.webp" />
+            </div>
+        }
+        else
+        {
+            <EditForm Model="Category" OnValidSubmit="UpsertCategory">
+                <DataAnnotationsValidator />
+                <div class="form-group pb-2">
+                    <label>Naziv</label>
+                    <InputText @bind-Value="Category.Name" class="form-control"></InputText>
+                    <ValidationMessage For="()=>Category.Name"></ValidationMessage>
+                </div>
+                <div class="form-group pb-2">
+                    <label>Opis</label>
+                    <SfRichTextEditor @bind-Value="Category.Description" class="form-control"></SfRichTextEditor>
+                    <ValidationMessage For="() => Category.Description"></ValidationMessage>
+                </div>
+                <div class="form-group py-2">
+                    <button class="btn btn-primary"><i class="bi bi-pencil-square"></i> @Title</button>
+                    <NavLink href="category" class="btn btn-success"><i class="bi bi-arrow-right-circle"></i> Nazad na listu</NavLink>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id{ get; set; }
+    private CategoryDTO Category { get; set; } = new CategoryDTO();
+    private string Title { get; set; } = "Kreiraj";
+    private bool IsLoading{ get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (Id == 0)
+            {
+                //create
+                IsLoading = false;
+            }
+            else
+            {
+                //update
+                Title = "Izmeni";
+                await LoadCategory();
+            }
+        }
+    }
+    private async Task LoadCategory()
+    {
+        IsLoading=true;
+        StateHasChanged();
+        Category = await _categoryRepository.Get(Id);
+        IsLoading = false;
+        StateHasChanged();
+
+    }
+
+    private async Task UpsertCategory()
+    {
+        if (Id == 0)
+        {
+            await _categoryRepository.Create(Category);
+            await _jsRuntime.ToastrSuccess("Uspesno kreirana kategorija");
+        }
+        else
+        {
+            await _categoryRepository.Update(Category);
+            await _jsRuntime.ToastrSuccess("Uspesno izmenjena kategorija");
+        }
+        _navManager.NavigateTo("category");
+    }
+}
